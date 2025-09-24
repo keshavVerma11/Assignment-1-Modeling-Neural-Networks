@@ -213,7 +213,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         out = gamma * x_hat + beta
 
         running_mean = momentum * running_mean + (1.0 - momentum) * sample_mean
-        running_var  = momentum * running_var  + (1.0 - momentum) * sample_var
+        running_var = momentum * running_var  + (1.0 - momentum) * sample_var
 
         cache = (gamma, beta, eps, sample_mean, sample_var, x, x_hat, std)
 
@@ -324,12 +324,12 @@ def batchnorm_backward_alt(dout, cache):
     gamma, beta, eps, mean, var, x, x_hat, std = cache
     N, D = dout.shape
 
-    dbeta  = np.sum(dout, axis=0)
+    dbeta = np.sum(dout, axis=0)
     dgamma = np.sum(dout * x_hat, axis=0)
 
     dx_hat = dout * gamma
-    sum_dx_hat       = np.sum(dx_hat, axis=0)
-    sum_dx_hat_x_hat  = np.sum(dx_hat * x_hat, axis=0)
+    sum_dx_hat = np.sum(dx_hat, axis=0)
+    sum_dx_hat_x_hat = np.sum(dx_hat * x_hat, axis=0)
 
     dx = (dx_hat - sum_dx_hat / N - x_hat * sum_dx_hat_x_hat / N) / std
 
@@ -377,8 +377,17 @@ def layernorm_forward(x, gamma, beta, ln_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    mean = x.mean(axis=1)
+    var = x.var(axis=1)
+    mean = mean[:, None]
+    var = var[:, None]
 
+    std = np.sqrt(var + eps)
+    x_hat = (x - mean) / std
+    out = gamma * x_hat + beta
+
+    cache = gamma, beta, eps, mean, var, x, x_hat, std
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -412,7 +421,19 @@ def layernorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    gamma, beta, eps, mean, var, x, x_hat, std = cache
+    N, D = dout.shape
+
+    dbeta  = np.sum(dout, axis=0)
+    dgamma = np.sum(dout * x_hat, axis=0)
+
+    dx_hat = dout * gamma
+    sum_dx_hat = np.sum(dx_hat, axis=1)
+    sum_dx_hat_x_hat = np.sum(dx_hat * x_hat, axis=1)
+    sum_dx_hat = sum_dx_hat[:, None]
+    sum_dx_hat_x_hat = sum_dx_hat_x_hat[:, None]
+
+    dx = (dx_hat - sum_dx_hat / D - x_hat * (sum_dx_hat_x_hat / D)) / std
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
